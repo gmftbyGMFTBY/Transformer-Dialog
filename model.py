@@ -42,14 +42,14 @@ class Transformer(nn.Module):
             self.dec_word_embed = nn.Embedding(n_dec_vocab, d_model, padding_idx=C.PAD)
 
         encoder_layer = nn.TransformerEncoderLayer(d_model, nhead=n_head, dim_feedforward=dim_feedforward, dropout=dropout)
-        encoder_norm =nn.LayerNorm(d_model)
+        encoder_norm = nn.LayerNorm(d_model)
         self.encoder = nn.TransformerEncoder(encoder_layer, num_encoder_layers, encoder_norm)
 
         decoder_layer = nn.TransformerDecoderLayer(d_model, nhead=n_head, dim_feedforward=dim_feedforward, dropout=dropout)
         decoder_norm = nn.LayerNorm(d_model)
         self.decoder = nn.TransformerDecoder(decoder_layer, num_decoder_layers, decoder_norm)
 
-        self.proj = nn.Linear(d_model, self.n_dec_vocab, bias=False)
+        self.proj = nn.Linear(d_model, self.n_dec_vocab)
 
 
     @staticmethod

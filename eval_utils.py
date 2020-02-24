@@ -17,6 +17,8 @@ def compute_bleu(truth, hypo):
     Returns:
         float -- bleu score
     """
+    truth = [i.replace('<user0>', '').replace('<user1>', '').strip() for i in truth]
+    hypo = [i.replace('<user0>', '').replace('<user1>', '').strip() for i in hypo]
     references = [[item.strip().split()]for item in truth]
     candidates = [item.strip().split() for item in hypo]
     score = corpus_bleu(references, candidates)

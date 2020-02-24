@@ -168,12 +168,15 @@ def beam_search(model, inputs, device="cpu", beam_size=5, n_best=1, max_len=128,
         return rst[:n_best]
 
 
-def batch_evaluate(model, test_iter, lang_src, lang_trg=None, device="cpu", max_len=128, beam_size=20, n_best=1, alpha=1., verbose=False):
+def batch_evaluate(model, test_iter, lang_src, lang_trg=None, device="cpu", max_len=128, beam_size=20, n_best=1, alpha=1., verbose=False, sample_file='samples/sample.txt'):
     if not lang_trg:
         lang_trg = lang_src
 
     dialogs = []
     pbar = tqdm(test_iter, total=len(test_iter))
+    if verbose:
+        print(f'write samples into file {sample_file}')
+        sample_file = open(sample_file, 'w')
     for inputs in pbar:
         hypos = batch_beam_search_trs(model, inputs, test_iter.batch_size, device=device,max_len=max_len, beam_size=beam_size, n_best=n_best, alpha=alpha)
         srcs = inputs[0].permute(1, 0).cpu().tolist()
@@ -197,6 +200,11 @@ def batch_evaluate(model, test_iter, lang_src, lang_trg=None, device="cpu", max_
             )
 
             if verbose:
+                # write into the sample
+                sample_file.write(f'-src: {src_txt}\n')
+                sample_file.write(f'-trg: {trg_txt}\n')
+                sample_file.write(f'-hyp: {hypo_txt}\n\n')
+                
                 print("User: %s" % src_txt)
                 print("Target: %s" % trg_txt)
                 for i, [hypo, score] in enumerate(n_best_hypo):
@@ -204,6 +212,8 @@ def batch_evaluate(model, test_iter, lang_src, lang_trg=None, device="cpu", max_
                     hypo_txt = hypo_txt.replace("<eos>", "").strip()
                     print("[%d/%d] Sys: %s, Score: %f\n" %
                           (i+1, len(n_best_hypo), hypo_txt, score))
+    if verbose:
+        sample_file.close()
 
     return dialogs
 

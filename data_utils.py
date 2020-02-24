@@ -10,6 +10,25 @@ import random
 import torch
 import constants as C
 import os
+import re
+
+def clean(s):
+    # this pattern are defined for cleaning the dailydialog dataset
+    s = s.strip().lower()
+    s = re.sub(r'(\w+)\.(\w+)', r'\1 . \2', s)
+    s = re.sub(r'(\w+)-(\w+)', r'\1 \2', s)
+    # s = re.sub(r'[0-9]+(\.[0-9]+)?', r'1', s)
+    s = s.replace('。', '.')
+    # s = s.replace(';', ',')
+    s = s.replace('...', ',')
+    s = s.replace(' p . m . ', ' pm ')
+    s = s.replace(' P . m . ', ' pm ')
+    s = s.replace(' a . m . ', ' am ')
+    
+    # this pattern are defined for cleaning the ubuntu dataset
+    # ....
+    return s
+
 
 def _read_raw_separate(src_path, trg_path):
     """read data from paired file with source and targat sentence in seperated file
@@ -24,7 +43,16 @@ def _read_raw_separate(src_path, trg_path):
     data = []
     with open(src_path) as src_f, open(trg_path) as trg_f:
         for src, trg in zip(src_f, trg_f):
-            pair = (src.strip().split(), trg.strip().split())
+            # NOTE 512 tokens
+            src = clean(src)
+            trg = clean(trg)
+            src, trg = src.replace('__eou__', '').strip().split(), trg.replace('__eou__', '').strip().split()
+            if len(src) > 300:
+                src = src[-300:]
+            if len(trg) > 300:
+                trg = trg[:50]
+            # pair = (src.strip().split(), trg.strip().split())
+            pair = (src, trg)
             data.append(pair)
 
     return data
@@ -38,12 +66,19 @@ def read_raw_weibo_data(src_path, trg_path):
 
 
 def read_raw_iwslt14_data(path, test_only=False):
+    train_path_de = os.path.join(path, "src-train.txt")
+    train_path_en = os.path.join(path, "tgt-train.txt")
+    valid_path_de = os.path.join(path, "src-dev.txt")
+    valid_path_en = os.path.join(path, "tgt-dev.txt")
+    test_path_de = os.path.join(path, "src-test.txt")
+    test_path_en = os.path.join(path, "tgt-test.txt")
+    '''
     train_path_en = os.path.join(path, "train.en")
     train_path_de = os.path.join(path, "train.de")
     valid_path_en = os.path.join(path, "valid.en")
     valid_path_de = os.path.join(path, "valid.de")
     test_path_en = os.path.join(path, "test.en")
-    test_path_de = os.path.join(path, "test.de")
+    test_path_de = os.path.join(path, "test.de")'''
 
     if test_only:
         test_data = read_raw_weibo_data(test_path_de, test_path_en)
